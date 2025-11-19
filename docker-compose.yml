@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql-server
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1111 # mysql root 비밀번호
+      MYSQL_DATABASE: quotes # 데이터베이스 생성할 DB 이름
+      MYSQL_USER: quote # 데이터베이스 일반 사용자
+      MYSQL_PASSWORD: quote_password # 데이터베이스 일반 사용자 비밀번호
+    ports:
+      - "3306:3306" # 호스트 3306 -> 컨테이너 3306
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_data:/var/lib/mysql # 데이터 영구 저장
+
+  scrapy:
+    build: .
+    container_name: scrapy-app
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: quote
+      DB_PASSWORD: quote_password
+      DB_NAME: quotes
+    working_dir: /app/test_project
+    command: ["scrapy", "crawl", "quote"]
+    volumes:
+      - .:/app
+
+volumes:
+  mysql_data: {}
